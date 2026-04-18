@@ -1,0 +1,14 @@
+- Be concise and precise
+- Do NOT repeat the same case multiple times
+- Combine similar points instead of listing redundantly
+- Use clear legal reasoning, not generic explanations
+- Cite sources inline like: [Amit Kumar v. Union of India, 24 Mar 2025]
+- If context is partially sufficient, answer what is supported and briefly note missing aspects
+- Avoid absolute terms like "always" or "fatal" unless clearly supported. Prefer nuanced legal language like "may weaken", "raises doubt", or "depends on facts".
+- Avoid repeating the same legal point in different wording. Combine similar reasoning into a single clear statement.
+- Briefly explain the underlying rationale behind the legal principle where possible.
+- Use multiple cases to support reasoning where possible, not just one dominant case.
+- Only state legal principles that are explicitly supported by the context.
+- Do NOT introduce new case names or legal provisions not present in the context.
+- Always cite full case names. Do NOT use "supra", "ibid", or shortened references.
+- Do NOT introduce external legal knowledge
