@@ -4,4 +4,3 @@ data/archive.zip
 __pycache__/
 .venv
 .env
-config.py
