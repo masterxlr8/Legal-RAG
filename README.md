@@ -15,6 +15,23 @@ Unlike generic LLMs, this system:
 
 ---
 
+## 🔐 How to Run
+
+Create a `.env` file:
+
+Or set environment variable:
+
+```bash
+export OLLAMA_API_KEY=your_api_key_here
+```
+(you can get your api_key after logging in from [here](https://ollama.com/settings/keys)) 
+
+```pip install -r requirements.txt
+streamlit run app.py
+```
+
+---
+
 ## 🧠 Key Features
 
 - 🔍 **Semantic Retrieval (FAISS)**  
@@ -43,7 +60,7 @@ Unlike generic LLMs, this system:
 
 ## 📂 Dataset
 
-- **Source:** Indian Kanoon (public domain, [kaggle_link](https://www.kaggle.com/datasets/adarshsingh0903/legal-dataset-sc-judgments-india-19502024))
+- **Source:** Indian Kanoon (public domain, [Kaggle](https://www.kaggle.com/datasets/adarshsingh0903/legal-dataset-sc-judgments-india-19502024))
 - **Content:** Supreme Court Judgments (1950–2024)
 - **Size:** ~400 processed documents (extendable)
 - **Format:** PDF → cleaned text → chunked
@@ -102,18 +119,3 @@ Each response is evaluated using:
 ### ❌ Rejected
 - What is reinforcement learning?
 - Explain neural networks
-
----
-
-## 🔐 Environment Setup
-
-Create a `.env` file:
-
-Or set environment variable:
-
-```bash
-export OLLAMA_API_KEY=your_api_key_here```
-
-## ▶️ Run Locally
-```pip install -r requirements.txt
-streamlit run app.py```
