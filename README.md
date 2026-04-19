@@ -24,9 +24,11 @@ Or set environment variable:
 ```bash
 export OLLAMA_API_KEY=your_api_key_here
 ```
-(you can get your api_key after logging in from [here](https://ollama.com/settings/keys)) 
+you can get your api_key after logging in from [here](https://ollama.com/settings/keys)
 
-```pip install -r requirements.txt
+Run from terminal
+```
+pip install -r requirements.txt
 streamlit run app.py
 ```
 
