@@ -1,3 +1,7 @@
-data/
+data/supreme_court_judgments/
+data/extracted_data/
+data/archive.zip
+__pycache__/
 .venv
+.env
 config.py
