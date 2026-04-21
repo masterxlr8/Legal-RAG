@@ -23,53 +23,35 @@ st.divider()
 query = st.text_input("Ask a legal question:")
 enable_llm_eval = st.checkbox("Enable LLM Evaluation (slow)")
 
+
 if query:
 
-    timings = {}
-
-    # ---- Step 1: Rewrite ----
     with st.spinner("Understanding query..."):
-        start = time.time()
+        # # ---- Step 1: Rewrite ----
         rewritten_query = rewrite_query(query)
-        timings["rewrite"] = time.time() - start
-
         answer = ""
 
         if rewritten_query.strip() == "Not a legal query":
             st.error("❌ Not a legal query")
+
             answer = "REJECTED"
             result = {}
 
     if answer != "REJECTED":
-
-        total_start = time.time()
-
-        with st.spinner("Processing..."):
+        with st.spinner("Processing..."):        
 
             # ---- Step 2: Retrieval ----
-            start = time.time()
             chunks = retrieve_with_rerank(rewritten_query)
-            timings["retrieval"] = time.time() - start
-
-            # ---- Step 3: Merge ----
-            start = time.time()
             chunks = merge_same_case(chunks)
-            timings["merge"] = time.time() - start
 
             if len(chunks) == 0:
                 st.warning("No relevant legal context found.")
 
-            # ---- Step 4: Generation ----
-            start = time.time()
+            # ---- Step 3: Generate Answer ----
             answer = generate_answer(rewritten_query, chunks)
-            timings["generation"] = time.time() - start
 
-            # ---- Step 5: Evaluation ----
-            start = time.time()
+            # ---- Step 4: Evaluation ----
             result = evaluate_single(query, answer, chunks, enable_llm_eval)
-            timings["evaluation"] = time.time() - start
-
-        timings["total"] = time.time() - total_start
 
         # ==============================
         # OUTPUT
@@ -98,19 +80,6 @@ if query:
         col1.write(f"**Primary:** {result.get('primary_citation_score', 0.0):.2f}")
         col2.write(f"**Secondary:** {result.get('secondary_citation_score', 0.0):.2f}")
         col3.write(f"**Hallucination:** {result.get('hallucination_rate', 0.0):.2f}")
-
-        st.subheader("⏱️ Performance Metrics")
-
-        col1, col2, col3 = st.columns(3)
-
-        col1.write(f"Rewrite: {timings.get('rewrite', 0):.2f}s")
-        col1.write(f"Retrieval: {timings.get('retrieval', 0):.2f}s")
-
-        col2.write(f"Merge: {timings.get('merge', 0):.2f}s")
-        col2.write(f"Generation: {timings.get('generation', 0):.2f}s")
-
-        col3.write(f"Evaluation: {timings.get('evaluation', 0):.2f}s")
-        col3.write(f"Total: {timings.get('total', 0):.2f}s")
 
         # ---- Sources ----
         st.subheader("📚 Sources")
