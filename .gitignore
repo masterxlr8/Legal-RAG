@@ -1,6 +1,8 @@
 data/supreme_court_judgments/
 data/extracted_data/
 data/archive.zip
+data/chunked_data/chunks_v2_26687docs.json
+data/chunked_data/chunks_v2_9985docs.json
 __pycache__/
 .venv
 .env

@@ -70,11 +70,20 @@ def rerank(query, retrieved_chunks, top_k=5):
     
     ranked = sorted(zip(scores, retrieved_chunks), key=lambda x: x[0], reverse=True)
     
-    return [chunk for _, chunk in ranked[:top_k]]
+    selected = []
+    seen_cases = set()
+    for _, c in ranked:
+        if c["case_name"] not in seen_cases:
+            selected.append(c)
+            seen_cases.add(c["case_name"])
+        if len(selected) == top_k:
+            break
+    
+    return selected
 
 def retrieve_with_rerank(query):
-    initial = retrieve(query, k=20)
-    final = rerank(query, initial, top_k=5)
+    initial = retrieve(query, k=10)
+    final = rerank(query, initial, top_k=3)
     return final
 
 def build_context(chunks):
@@ -157,8 +166,7 @@ You are a classifier and rewriter.
 Task:
 1. Determine if the query is related to law, legal systems, courts, crime, rights, or legal procedures.
 2. If YES:
-   - Rewrite it into a clear and concise legal query (Indian legal context if applicable).
-   - Keep it short (1 line).
+   - Rewrite it into a short, clear and concise legal query (Indian legal context if applicable).
 3. If NO:
    - Return exactly: Not a legal query
 
@@ -173,21 +181,6 @@ Query:
 Output:
 """
     return call_ollama_cloud(prompt)
-
-def diversify_chunks(chunks):
-    seen_cases = dict()
-    unique = []
-
-    for c in chunks:
-        if c["case_name"] not in seen_cases:
-            unique.append(c)
-            seen_cases[c["case_name"]] = 1
-        else:
-            seen_cases[c["case_name"]] += 1
-        if seen_cases[c["case_name"]] <= 3:
-            unique.append(c)
-
-    return unique
 
 def merge_same_case(chunks):
     merged = {}
@@ -227,7 +220,7 @@ def classify_citations(answer, chunks):
 
     return primary, secondary, hallucinated
 
-def evaluate_single(query, item, answer, chunks):
+def evaluate_single(query, answer, chunks, enable_llm_eval=False):
     # ---- Build context ----
     context = " ".join([c["text"] for c in chunks]).lower()
     case_names = [c["case_name"].lower() for c in chunks]
@@ -260,8 +253,11 @@ def evaluate_single(query, item, answer, chunks):
 
     # ---- LLM evaluation ----
     try:
-        llm_eval_raw = llm_evaluate(query, context, answer)
-        llm_eval = json.loads(llm_eval_raw)
+        if enable_llm_eval:
+            llm_eval_raw = llm_evaluate(query, context, answer)
+            llm_eval = json.loads(llm_eval_raw)
+        else:
+            llm_eval = {}
     except:
         llm_eval = {"error": "invalid_json"}
 
@@ -322,36 +318,4 @@ def llm_evaluate(query, context, answer):
     response = call_ollama_cloud(prompt)
 
     return response
-
-def run_full_evaluation(evaluation_set):
-
-    results = []
-
-    for item in tqdm(evaluation_set):
-        query = item["query"]
-
-        # ---- Step 1: Rewrite / classify ----
-        rewritten_query = rewrite_query(query)
-
-        # ---- Step 2: Handle rejection ----
-        if rewritten_query.strip() == "Not a legal query":
-            answer = "REJECTED"
-            chunks = []
-
-        else:
-            # ---- Step 3: Retrieval ----
-            chunks = retrieve_with_rerank(rewritten_query)
-
-            # ---- Step 4: Post-process ----
-            chunks = merge_same_case(chunks)
-
-            # ---- Step 5: Generation ----
-            answer = generate_answer(rewritten_query, chunks)
-
-        # ---- Step 6: Evaluation ----
-        result = evaluate_single(query, item, answer, chunks)
-        results.append(result)
-
-    return results
-
 

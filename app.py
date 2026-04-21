@@ -1,4 +1,5 @@
 import streamlit as st
+import time
 from helper import rewrite_query, retrieve_with_rerank, merge_same_case, generate_answer, evaluate_single, get_resources
 
 
@@ -20,35 +21,55 @@ st.divider()
 
 # ---- Input ----
 query = st.text_input("Ask a legal question:")
+enable_llm_eval = st.checkbox("Enable LLM Evaluation (slow)")
 
 if query:
 
+    timings = {}
+
+    # ---- Step 1: Rewrite ----
     with st.spinner("Understanding query..."):
-        # # ---- Step 1: Rewrite ----
+        start = time.time()
         rewritten_query = rewrite_query(query)
+        timings["rewrite"] = time.time() - start
+
         answer = ""
 
         if rewritten_query.strip() == "Not a legal query":
             st.error("❌ Not a legal query")
-
             answer = "REJECTED"
             result = {}
 
     if answer != "REJECTED":
-        with st.spinner("Processing..."):        
+
+        total_start = time.time()
+
+        with st.spinner("Processing..."):
 
             # ---- Step 2: Retrieval ----
+            start = time.time()
             chunks = retrieve_with_rerank(rewritten_query)
+            timings["retrieval"] = time.time() - start
+
+            # ---- Step 3: Merge ----
+            start = time.time()
             chunks = merge_same_case(chunks)
+            timings["merge"] = time.time() - start
 
             if len(chunks) == 0:
                 st.warning("No relevant legal context found.")
 
-            # ---- Step 3: Generate Answer ----
+            # ---- Step 4: Generation ----
+            start = time.time()
             answer = generate_answer(rewritten_query, chunks)
+            timings["generation"] = time.time() - start
 
-            # ---- Step 4: Evaluate ----
-            result = evaluate_single(query, {}, answer, chunks)
+            # ---- Step 5: Evaluation ----
+            start = time.time()
+            result = evaluate_single(query, answer, chunks, enable_llm_eval)
+            timings["evaluation"] = time.time() - start
+
+        timings["total"] = time.time() - total_start
 
         # ==============================
         # OUTPUT
@@ -59,16 +80,17 @@ if query:
         st.write(answer)
 
         # ---- Evaluation ----
-        st.subheader("🧠 Evaluation")
+        if enable_llm_eval:
+            st.subheader("🧠 Evaluation")
 
-        col1, col2, col3, col4 = st.columns(4)
+            col1, col2, col3, col4 = st.columns(4)
 
-        llm_eval = result.get("llm_eval", {})
+            llm_eval = result.get("llm_eval", {})
 
-        col1.metric("Grounding", llm_eval.get("grounding", "N/A"))
-        col2.metric("Completeness", llm_eval.get("completeness", "N/A"))
-        col3.metric("Hallucination", llm_eval.get("hallucination", "N/A"))
-        col4.metric("Score", llm_eval.get("score (out of 5)", "N/A"))
+            col1.metric("Grounding", llm_eval.get("grounding", "N/A"))
+            col2.metric("Completeness", llm_eval.get("completeness", "N/A"))
+            col3.metric("Hallucination", llm_eval.get("hallucination", "N/A"))
+            col4.metric("Score (out of 5)", llm_eval.get("score", "N/A"))
 
         st.write("### Citation Metrics")
         col1, col2, col3 = st.columns(3, gap='xxsmall')
@@ -76,6 +98,19 @@ if query:
         col1.write(f"**Primary:** {result.get('primary_citation_score', 0.0):.2f}")
         col2.write(f"**Secondary:** {result.get('secondary_citation_score', 0.0):.2f}")
         col3.write(f"**Hallucination:** {result.get('hallucination_rate', 0.0):.2f}")
+
+        st.subheader("⏱️ Performance Metrics")
+
+        col1, col2, col3 = st.columns(3)
+
+        col1.write(f"Rewrite: {timings.get('rewrite', 0):.2f}s")
+        col1.write(f"Retrieval: {timings.get('retrieval', 0):.2f}s")
+
+        col2.write(f"Merge: {timings.get('merge', 0):.2f}s")
+        col2.write(f"Generation: {timings.get('generation', 0):.2f}s")
+
+        col3.write(f"Evaluation: {timings.get('evaluation', 0):.2f}s")
+        col3.write(f"Total: {timings.get('total', 0):.2f}s")
 
         # ---- Sources ----
         st.subheader("📚 Sources")
