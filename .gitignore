@@ -9,3 +9,4 @@ data/embeddings/embeddings_v2_2400docs.npy
 __pycache__/
 .venv
 .env
+*.ipynb
