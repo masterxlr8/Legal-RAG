@@ -4,8 +4,8 @@ data/archive.zip
 data/chunked_data/chunks_v2_26687docs.json
 data/chunked_data/chunks_v2_9985docs.json
 data/chunked_data/chunks_v2_2400docs.json
-data/chunked_data/chunks_v2_2400docs.json
 data/embeddings/embeddings_v2_2400docs.npy
 __pycache__/
 .venv
 .env
+*.ipynb

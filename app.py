@@ -21,7 +21,8 @@ st.divider()
 
 # ---- Input ----
 query = st.text_input("Ask a legal question:")
-enable_llm_eval = st.checkbox("Enable LLM Evaluation (slow)")
+enable_answer_rewrite = st.checkbox("Enable Query Rewriting (for better retrieval but slow)")
+enable_llm_eval = st.checkbox("Enable LLM Evaluation (slower)")
 
 if query:
 
@@ -30,7 +31,10 @@ if query:
     # ---- Step 1: Rewrite ----
     with st.spinner("Understanding query..."):
         start = time.time()
-        rewritten_query = rewrite_query(query)
+        if enable_answer_rewrite:
+            rewritten_query = rewrite_query(query)
+        else:
+            rewritten_query = query
         timings["rewrite"] = time.time() - start
 
         answer = ""
